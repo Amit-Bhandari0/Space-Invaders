@@ -33,15 +33,15 @@ A classic Space Invaders game built with Python and Pygame, featuring multiple e
 
 4. Ensure the following asset folders and files exist:  
    assets/  
-     images/  
-       spaceship.png  
-       alien_1.png  
-       alien_2.png  
-     sounds/  
-       background.ogg  
-       laser.ogg  
-       explosion.ogg  
-       gameover.wav  
+      images/  
+         spaceship.png  
+         alien_1.png  
+         alien_2.png  
+      sounds/  
+         background.ogg  
+         laser.ogg  
+         explosion.ogg  
+         gameover.wav  
 
 5. Run the game:  
    5.1 Run:  
