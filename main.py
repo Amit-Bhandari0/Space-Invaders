@@ -62,6 +62,7 @@ columns, rows = 10, 5
 score = 0
 
 ENEMY_WIDTH, ENEMY_HEIGHT = 32, 32
+PLAYER_WIDTH, PLAYER_HEIGHT = 64, 64
 X_MARGIN, Y_MARGIN = 40, 40
 X_SPACING, Y_SPACING = 48, 50
 
@@ -98,7 +99,7 @@ def is_collision(ex, ey, bx, by):
     return math.hypot(ex - bx, ey - by) < 27
 
 def is_line_collision(px, py, lx, ly):
-    return px <= lx <= px + 64 and py <= ly <= py + 64
+    return px <= lx <= px + PLAYER_WIDTH and py <= ly <= py + PLAYER_HEIGHT
 
 def reset_game():
     global player_x, player_x_change, player_lives, bullets, score, game_over, game_over_played
@@ -149,18 +150,27 @@ while running:
             fire_bullet(player_x, player_y)
             last_bullet_time = current_time
 
-        player_x = max(0, min(player_x + player_x_change, SCREEN_WIDTH - 64))
+        player_x = max(0, min(player_x + player_x_change, SCREEN_WIDTH - PLAYER_WIDTH))
         screen.blit(player_img, (player_x, player_y))
 
-        for enemy in enemies[:]:
+        # Enemy movement and edge detection
+        edge_hit = False
+        for enemy in enemies:
             if not enemy['dead']:
                 enemy['x'] += enemy['dx']
                 if enemy['x'] <= 0 or enemy['x'] >= SCREEN_WIDTH - ENEMY_WIDTH:
-                    for e in enemies:
-                        if not e['dead']:
-                            e['dx'] *= -1
-                            e['x'] += e['dx']
-                            e['y'] += 20
+                    edge_hit = True
+
+        if edge_hit:
+            for enemy in enemies:
+                if not enemy['dead']:
+                    enemy['dx'] *= -1
+                    enemy['y'] += 20
+                    enemy['x'] += enemy['dx']
+
+        # Draw enemies and handle falling logic
+        for enemy in enemies[:]:
+            if not enemy['dead']:
                 screen.blit(enemy['img'], (enemy['x'], enemy['y']))
             elif enemy['falling']:
                 lx = enemy['x'] + ENEMY_WIDTH // 2
@@ -174,6 +184,7 @@ while running:
                 if enemy['fall_y'] > SCREEN_HEIGHT:
                     enemies.remove(enemy)
 
+        # Bullet movement and collision
         for bullet in bullets[:]:
             bullet['y'] -= bullet_speed
             if bullet['y'] < 0:
@@ -190,6 +201,19 @@ while running:
                         if bullet in bullets:
                             bullets.remove(bullet)
                         break
+
+        # Check collision between enemies and player
+        player_rect = pygame.Rect(player_x, player_y, PLAYER_WIDTH, PLAYER_HEIGHT)
+        for enemy in enemies:
+            if not enemy['dead']:
+                enemy_rect = pygame.Rect(enemy['x'], enemy['y'], ENEMY_WIDTH, ENEMY_HEIGHT)
+                if enemy_rect.colliderect(player_rect):
+                    player_lives = 0
+                    game_over = True
+                    if not game_over_played:
+                        gameover_sound.play()
+                        game_over_played = True
+                    break
 
         if player_lives <= 0:
             if not game_over:
